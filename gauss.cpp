@@ -1,5 +1,5 @@
 /*
- *  autheur : RATEFIARISON Harivony Lalatiana
+ *  auteur : RATEFIARISON Harivony Lalatiana
  */
 
 #include <iostream> //inclure bibliothèque standard
@@ -9,9 +9,7 @@
 
 using namespace std;//esppace de nom standard
 
-int dim = 3;        // entrer la taille du tableau en dur
-
-
+int taille (0);        // initialisation de la taille de la matrice et de vecteur
 
 float **newMat(int rows, int cols){ //allocation dynamique de tableau rows*cols
     float **mat(NULL);
@@ -37,15 +35,15 @@ void swap (T a, T b){
 }
 
 void displayMatrix(float** mat){    //afficher la matrice
-    for (int i=0;i<dim;i++){
-        for(int j=0; j<dim; j++)
+    for (int i=0;i<taille;i++){
+        for(int j=0; j<taille; j++)
             cout << mat[i][j] << " ";
         cout << endl;
     }
 }
 
 void displayVec (float* v){         //afficher un vecteur
-    for(int i=0; i<dim; i++){
+    for(int i=0; i<taille; i++){
         cout << "[" << v[i] << "]" << endl;
     }
 }
@@ -54,9 +52,10 @@ class Lsolver{
 //METHODS
     public:
     //constructor
-    Lsolver();
+    Lsolver(){}
+    Lsolver(string file);
     //destructor
-    ~Lsolver(){}
+    ~Lsolver();
     //display
     void displayMatTrian();
     void displayResult();
@@ -68,21 +67,26 @@ class Lsolver{
     float** getMatrix(){return matrice;}
     float* getB(){return b;}
     float* getSolution(){return solution;}
+    int getDim(){return dim;}
 
 //ATTRIBUTES
     private:
-    float** matrice;
-    float*  b;
-    float*  solution;
+    float** matrice;            //matrice premier membre
+    float*  b;                  //second membre du systeme
+    float*  solution;           //solution
+    int dim;
 };
 
 /*CONSTRUCTOR*/
-Lsolver::Lsolver(){     
-    matrice = newMat(dim,dim);  //allouer un nouveau tableau pour la matrice
-    b = newVec(dim);            //alouer un nouveau tableau pour un vector
+Lsolver::Lsolver(string file){     
 
-    ifstream fichier("matrice");
+    ifstream fichier(file);
     if (fichier){
+        fichier >> dim;
+        taille = dim;
+        matrice = newMat(dim,dim);  //allouer un nouveau tableau pour la matrice
+        b = newVec(dim);            //alouer un nouveau tableau pour un vector
+        
         for(int i=0; i<dim;i++){
             for(int j=0; j<dim;j++){
                 fichier >> matrice [i][j];
@@ -96,11 +100,21 @@ Lsolver::Lsolver(){
     fichier.close();
 }
 
+/*DESTRUCTOR*/
+
+Lsolver::~Lsolver(){
+    for(int y = 0; y < dim; y++)    //delete colonne
+        delete[] matrice[y];
+    delete[] matrice;               //supprimé ligne
+    delete[] b;                     //supprimer le tableau contenant le second membre
+    delete[] solution;              //supprimer le tableau contenant la solution
+}
+
 void Lsolver::displayMatTrian(){    //afficher le systeme triangularisé
     for (int i=0;i<dim;i++){        
         for(int j=0; j<dim; j++){
             if (matrice[i][j]==0)
-                cout << "       ";
+                cout << "      ";
             else
                 if(matrice[i][j]>0&&matrice[i][j-1]!=0)
                     cout <<  "+ " << matrice[i][j] << ".x" <<j+1 << " ";
@@ -114,7 +128,7 @@ void Lsolver::displayMatTrian(){    //afficher le systeme triangularisé
 void Lsolver::displayResult(){
     for(int i=0; i<dim; i++){
         cout << "x"<< i+1 << " = " << solution[i] << endl;
-}
+    }
 }
 
 void Lsolver::gaussElim(){
@@ -165,7 +179,17 @@ void Lsolver::solveMatrice(){
 }
 
 int main(){
-    Lsolver s;
+    Lsolver s("matrice");   //initialiser le systeme depuis le fichier "matrice"
+
+    /*le contenu du fichier "matrice" :
+    3
+    1 2 3
+    2 4 5
+    7 8 9
+    4
+    9
+    29
+    */
 
     cout << "Resolution d'un systeme linéaire A.x=b" << endl;
     cout << "La matrice A :" << endl;
@@ -188,16 +212,3 @@ int main(){
     
     return 0;   //fonction executé avec succes
 }
-
-/*
-to do
------
-- set argument for file matrice load
-- verify triangularisation : methode de pivot
-
-- finalise interface : displayTriang
-- add comment
-- ~Lsolver(){
-    
-}
-*/
